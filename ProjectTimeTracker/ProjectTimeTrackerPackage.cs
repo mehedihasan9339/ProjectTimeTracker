@@ -1,4 +1,6 @@
-﻿using Microsoft.VisualStudio;
+﻿using EnvDTE;
+using EnvDTE80;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
@@ -49,11 +51,30 @@ namespace ProjectTimeTracker
             return VSConstants.S_OK;
         }
 
+        private string GetActiveProjectName()
+        {
+            // Get the DTE (Development Tools Environment) service from Visual Studio
+            DTE2 dte = (DTE2)Package.GetGlobalService(typeof(DTE));
+
+            if (dte?.Solution?.Projects != null)
+            {
+                // Get the active project or first project in the solution
+                var activeProject = dte.ActiveSolutionProjects as Array;
+                if (activeProject != null && activeProject.Length > 0)
+                {
+                    Project project = (Project)activeProject.GetValue(0);
+                    return project.Name; // Return the project name
+                }
+            }
+
+            return "Unknown Project"; // Return a fallback value if no project is found
+        }
+
         private void SaveTimeSpent(TimeSpan timeSpent)
         {
             var projectTimeData = new ProjectTimeData
             {
-                ProjectName = "MyProject",  // For demo, replace with the actual project name logic
+                ProjectName = GetActiveProjectName(),  // Dynamically get the project name
                 StartTime = _projectStartTime,
                 TotalTimeSpent = timeSpent
             };
